@@ -4,25 +4,20 @@ import org.junit.Test
 
 class RenewKnowledgeTest {
 
-    fun sum(a: Int, b: Int) = a + b
-
-    fun sum1(a: Int, b: Int): Int {
-        return a + b
-    }
-
     @Test
     fun test() {
 
         class Chihua {
             var angryLvl = 0
-            fun givePaw()=
-                if (angryLvl==0) println ("GivsApaw")
-                else          println("kus`")
-            fun makeSound(loud:Boolean) = when {
-                angryLvl == 0 -> println(if (!loud)"rrr" else "RRR")
-                angryLvl == 1 -> println(if (!loud)"grrr" else "GRRR")
-                angryLvl == 2 -> println(if(!loud)" GAV!" else "killedGav!")
-                else -> println( " AllahAkbar")
+            fun givePaw() =
+                if (angryLvl == 0) println(message = "GivsPaw")
+                else println("kus`")
+
+            fun makeSound(loud: Boolean) = when {
+                angryLvl == 0 -> println(message = if (!loud) "rrr" else "RRR")
+                angryLvl == 1 -> println(message = if (!loud) "grrr" else "GRRR")
+                angryLvl == 2 -> println(message = if (!loud) " GAV!" else "killingGav!")
+                else -> println(message = " AllahAkbar")
             }
         }
 
@@ -33,6 +28,108 @@ class RenewKnowledgeTest {
         gosha.angryLvl = 2
         gosha.givePaw()
         gosha.makeSound(loud = true)
+
+
+
+
+        class Pug {
+
+            fun makeSound(loud: Boolean) {
+                println(message = if (!loud) "khsss" else "KHSSSandSlaver")
+            }
+
+            fun givePaw() {
+                println("givePaw")
+            }
+
+        }
+
+        val mark = Pug()
+        mark.makeSound(loud = true)
+        mark.givePaw()
+
+        class Gsd {
+            var isJob = true
+            var goodBoy = true
+            fun makeSound(loud: Boolean) {
+                if (isJob == true) println(if (!loud) "Gav" else "GAV")
+                else println(if (!loud) "mrrrr" else "MRRR")
+            }
+
+            fun givePaw() {
+                println("WhoTheGoodBoyThere?Yes.ItsMe")
+            }
+
+            fun pat() {
+                if (goodBoy == true) println("Fawn")
+                else println("!Fawn")
+            }
+        }
+
+        val jeck = Gsd()
+        jeck.makeSound(loud = true)
+        jeck.givePaw()
+        jeck.pat()
+
+        class Gsd {
+            var isJob = true
+            var goodBoy = true
+        }
+
+        fun makeSound(u: Gsd, loud: Boolean) {
+            if (u.isJob == true) println(if (!loud) "Gav" else "GAV")
+            else println(if (!loud) "mrrrr" else "MRRR")
+        }
+
+        fun givePaw() {
+            println("WhoTheGoodBoyThere?Yes.ItsMe")
+        }
+
+        fun pat(u: Gsd) {
+            if (u.goodBoy == true) println("Fawn")
+            else println("!Fawn")
+        }
+
+        val jeck = Gsd()
+        makeSound(u = jeck, loud = true)
+        givePaw()
+        pat(u = jeck)
+
+
+        class DogTrainer {
+
+            fun train() {
+                this.startTrain()
+                dogs.forEach(fun (dog: Gsd) = dog.makeSound(loud = false))
+            }
+
+            /**
+             * не должна использоваться извне
+             */
+            fun startTrain() {
+                println("Voice!")
+            }
+
+            /**
+             * не должна использоваться извне
+             */
+            val dogs = listOf(Gsd(), Gsd(), Gsd())
+        }
+        val viktor = DogTrainer()
+        viktor.train()
+        train(this = viktor)
+
+
+//        Описать класс мопс (Pug)
+//
+//        Мопс может издавать звук - сопение. Звук он может издавать громко или не громко.
+//        Мопс может дать лапу
+//
+//        Описать класс овчарка (Gsd)
+//
+//        Если овчарка сейчас на службе, то она издаёт звук "gav". Если не на службе,
+//        то звук "mrrrr". Овчарка может издавать звуки громко или не громко. Может дать лапу
+//        Если добрая- виляет хвостом, если злая то не виляет хвостом
 
         // Задание 1
         // Чихуахуа может быть в ярости или не в ярости
