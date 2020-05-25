@@ -7,11 +7,13 @@ class Chihua : Dog {
         else println("kus`")
     }
 
-    override fun makeSound(loud: Boolean) = when {
-        angryLvl == 0 -> println(message = if (!loud) "rrr" else "RRR")
-        angryLvl == 1 -> println(message = if (!loud) "grrr" else "GRRR")
-        angryLvl == 2 -> println(message = if (!loud) " GAV!" else "killingGav!")
-        else -> println(message = " AllahAkbar")
+    override fun makeSound(loud: Boolean) {
+        when {
+            angryLvl == 0 -> println(message = if (!loud) "rrr" else "RRR")
+            angryLvl == 1 -> println(message = if (!loud) "grrr" else "GRRR")
+            angryLvl == 2 -> println(message = if (!loud) " GAV!" else "killingGav!")
+            else -> println(message = " AllahAkbar")
+        }
     }
 
     override fun pat() {

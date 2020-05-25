@@ -1,7 +1,5 @@
 package rusha.x
 
-import org.jetbrains.annotations.TestOnly
-
 class Recipe(
     val name: String,
     val portionsCount: Int,
@@ -12,4 +10,3 @@ class Recipe(
         val product: Product
     )
 }
-

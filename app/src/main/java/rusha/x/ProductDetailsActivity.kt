@@ -19,14 +19,10 @@ class ProductDetailsActivity : AppCompatActivity() {
 
         nameView.text = product.name
         priceView.text = "${product.price}/${product.unit}"
-
-//        Toast.makeText(this, "С созданием!", Toast.LENGTH_LONG).show()
     }
 
     override fun onResume() {
         super.onResume()
         Toast.makeText(this, "С возвращением!", Toast.LENGTH_LONG).show()
     }
-
-    // 50.0/шт.
 }

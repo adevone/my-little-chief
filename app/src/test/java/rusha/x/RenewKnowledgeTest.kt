@@ -33,53 +33,182 @@ class RenewKnowledgeTest {
 
         val marta = HostessDog(dogs = listOf(Gsd(), Gsd(), Gsd(), Pug(), Chihua()))
         marta.helloDog()
+    }
+
+    @Test
+    fun cats() {
+        val barbara = MistressKat(cats = listOf(Maykun(), UndergroundKitty()))
+        barbara.observeTheRegime()
+
+        val lola = Nurse(cats = listOf(Maykun(), UndergroundKitty()))
+        lola.giveFood()
+
+        val kleo = Sphinx()
+        kleo.pat()
+        kleo.clean()
+        kleo.pat()
+
+        val vaska = UndergroundKitty()
+        vaska.clean()
+        vaska.eat()
+        vaska.pat()
+
+        val king = Maykun()
+        king.clean()
+        king.eat()
+        king.pat()
+    }
+}
+
+interface Cat : PrettyKitty, GluttonyCat
 
 
-        class Meykun {
-            var inLite: Boolean = true
-            fun clean() {
-                inLite = false
-                println("hsss")
-            }
+class Maykun : Cat {
+    var inLite: Boolean = true
+    override fun clean() {
+        inLite = false
+        println("hsss")
+    }
 
-            fun Food() {
-                inLite = true
-                println("nyam")
-            }
+    override fun eat() {
+        inLite = true
+        println("nya")
+    }
 
-            fun pat(inLite: Boolean) {
-                println(if (!inLite) "czarap" else "mrrr")
-            }
+    override fun pat() {
+        println(if (!inLite) "czarap" else "mrrr")
+    }
+}
+
+
+class Sphinx : Cat {
+    var happyLvl = 3
+    override fun pat() {
+        if (happyLvl <= 6) {
+            happyLvl = happyLvl + 1
         }
-
-        class Sphinx {
-            var happyLvl = 3
-            fun pat() {
-                if (happyLvl < 7) {
-                    happyLvl = happyLvl + 1
-                }
-                println("mrrr")
-            }
-
-            fun giveFood() {
-                if (happyLvl< 6){
-                happyLvl = happyLvl + 2
-                println(" nyam")
-            }
-
-            fun clean()
-            happyLvl = happyLvl - 3
-            println ("ksss")
-
-        }
-
-        class UndegraundKissy {
-
-        }
+        println("mrrr")
     }
 
 
+    override fun eat() {
+        if (happyLvl <= 5) {
+            happyLvl = happyLvl + 2
+        } else if (happyLvl <= 6) {
+            happyLvl = happyLvl + 1
+        }
+        println(" nya")
+    }
+
+    override fun clean() {
+        when {
+            happyLvl >= 2 -> {
+                happyLvl = happyLvl - 3
+            }
+            happyLvl > 1 -> {
+                happyLvl = happyLvl - 2
+            }
+            happyLvl == 0 -> {
+                happyLvl = happyLvl - 1
+            }
+        }
+    }
 }
+
+
+class UndergroundKitty : Cat {
+    override fun eat() {
+        println("nya")
+    }
+
+    override fun clean() {
+        println("IRememberThisBitch")
+    }
+
+    override fun pat() {
+        println("mrrr")
+    }
+}
+
+class Nurse(
+    private val cats: List<GluttonyCat>
+) {
+    fun giveFood() {
+        cats.forEach(fun(gluttonyCat: GluttonyCat) {
+            gluttonyCat.eat()
+        })
+        println("GluttonyCat")
+    }
+}
+
+class MistressKat(
+    private val cats: List<PrettyKitty>
+) {
+    private var morning = true
+    private var day = false
+    private var evening = false
+
+    fun setMorning() {
+        morning = true
+        day = false
+        evening = false
+    }
+
+    fun setDay() {
+        morning = false
+        day = true
+        evening = false
+    }
+
+    fun setEvening() {
+        morning = false
+        day = false
+        evening = true
+    }
+
+    private fun giveFood() {
+        startGiveFood()
+        cats.forEach(fun(prettyKitty: PrettyKitty) {
+            prettyKitty.eat()
+        })
+    }
+
+    private fun startGiveFood() {
+        println("ks ks ks ks ska")
+    }
+
+    private fun pat() {
+        println("prettyKitty")
+    }
+
+    private fun clean() {
+        cats.forEach(fun(prettyKitty: PrettyKitty) {
+            prettyKitty.clean()
+        })
+    }
+
+    fun observeTheRegime() {
+        when {
+            morning -> giveFood()
+            day -> {
+                giveFood()
+                pat()
+            }
+            evening -> {
+                giveFood()
+                clean()
+            }
+        }
+
+    }
+}
+
+
+//Хозяин может иметь несколько кошек.Утром кормит кошек. Днем он их кормит и гладит, вечером - кормит.
+//Когда наступает пятница 13е - он их моет.
+
+//Кормилица может кормить всех кошек, которые у нее есть.
+
 //мейкун
 //помыть, тогда он приходит в ярость и поет дориме,
 // его можно покормить тогда он успокаивается
@@ -95,8 +224,3 @@ class RenewKnowledgeTest {
 //Можно помыть. Он промолчит,но запомнит
 //Погладить. Если его только что покормили, то мурлычет. Если не кормили давно то нейтрален.
 // Если помыли то шипит
-
-//Хозяин может иметь несколько кошек.Утром кормит кошек. Днем он их кормит и гладит, вечером - кормит.
-//Когда наступает пятница 13е - он их моет.
-
-//Кормилица может кормить всех кошек, которые у нее есть.

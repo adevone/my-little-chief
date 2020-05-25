@@ -5,7 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <Button
-        android:id="@+id/basketItemView"
+        android:id="@+id/toRecipeButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="К рецептам"
@@ -14,10 +14,10 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/BasketRecyclerView"
+        android:id="@+id/basketRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintTop_toBottomOf="@id/basketItemView"
+        app:layout_constraintTop_toBottomOf="@id/toRecipeButton"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="parent"
