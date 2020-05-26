@@ -52,7 +52,7 @@ class RecipeDetailsActivity : AppCompatActivity() {
 /**
  * Преобразует список [ingredientsToAdopt] в отображение списка в [ingredientsView]
  */
-class RecipeListAdapter : RecyclerView.Adapter<RecipeListAdapter.ViewHolder>() {
+class RecipeListAdapter : RecyclerView.Adapter<RecipeListAdapter.IngredientViewHolder>() {
 
     /**
      * Список который адаптирует [RecipeListAdapter]
@@ -70,7 +70,7 @@ class RecipeListAdapter : RecyclerView.Adapter<RecipeListAdapter.ViewHolder>() {
     /**
      * Создать ячейку привязанную к RecyclerView ([parent])
      */
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): IngredientViewHolder {
 
         // Получить [LayoutInflater] из текущего контекста
         // который можно получить из любого отображения в этом контексте
@@ -85,14 +85,14 @@ class RecipeListAdapter : RecyclerView.Adapter<RecipeListAdapter.ViewHolder>() {
         )
 
         // Создать ячейку у которой в качестве отображения будет значение переменной [view]
-        return ViewHolder(containerView = view)
+        return IngredientViewHolder(containerView = view)
     }
 
     /**
      * Заполнить ячейку [holder] элементом из списка [ingredientsToAdopt]
      * по позиции [position]
      */
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: IngredientViewHolder, position: Int) {
         // Получить ингридиент по позиции [position]
         val ingredientOnPosition = ingredientsToAdopt.get(index = position)
 
@@ -103,7 +103,7 @@ class RecipeListAdapter : RecyclerView.Adapter<RecipeListAdapter.ViewHolder>() {
     /**
      * Ячейка списка
      */
-    class ViewHolder(
+    class IngredientViewHolder(
         /**
          * Отображение ячейки (ConstraintLayout из recipe_details_item.xml)
          */

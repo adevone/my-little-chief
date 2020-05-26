@@ -14,7 +14,6 @@ class BasketActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.basket_activity)
-
         val basket = Basket(
             items = listOf(
                 Basket.Item(
@@ -43,44 +42,69 @@ class BasketActivity : AppCompatActivity() {
                 )
             )
         )
-
         val itemViewAdapter = BasketListAdapter()
         itemViewAdapter.itemsToAdopt = basket.items
         basketRecyclerView.adapter = itemViewAdapter
     }
-
 }
 
-class BasketListAdapter : RecyclerView.Adapter<BasketListAdapter.ViewHolder>() {
+class BasketListAdapter : RecyclerView.Adapter<BasketListAdapter.ItemViewHolder>() {
+
     var itemsToAdopt: List<Basket.Item> = listOf()
     override fun getItemCount(): Int {
         return itemsToAdopt.size
     }
 
     override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): BasketListAdapter.ViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
+        parent: ViewGroup, viewType: Int
+    ): BasketListAdapter.ItemViewHolder {
+        val inflater = LayoutInflater.from(parent.context) // была опечатка. LayoutInfla-y-ter
         val view = inflater.inflate(
             R.layout.basket_item,
             parent,
             false
         )
-        return ViewHolder(containerView = view)
+        return ItemViewHolder(containerView = view)
+
     }
 
-    override fun onBindViewHolder(holder: BasketListAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BasketListAdapter.ItemViewHolder, position: Int) {
         val itemOnPosition = itemsToAdopt.get(index = position)
         holder.bind(item = itemOnPosition)
     }
 
-    class ViewHolder(
+    class ItemViewHolder(
         val containerView: View
     ) : RecyclerView.ViewHolder(containerView) {
         fun bind(item: Basket.Item) {
             containerView.basketItemView.text = item.product.name
-            containerView.basketCountView.text = item.product.price.toString()
+            containerView.basketCountView.text = item.count.toString()
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
