@@ -1,6 +1,16 @@
 package rusha.x
 
 import org.junit.Test
+import rusha.x.cats.Maykun
+import rusha.x.cats.MistressKat
+import rusha.x.cats.Nurse
+import rusha.x.cats.Sphinx
+import rusha.x.cats.UndergroundKitty
+import rusha.x.dogs.Chihua
+import rusha.x.dogs.DogTrainer
+import rusha.x.dogs.Gsd
+import rusha.x.dogs.HostessDog
+import rusha.x.dogs.Pug
 
 class RenewKnowledgeTest {
 
@@ -8,9 +18,10 @@ class RenewKnowledgeTest {
     fun dogs() {
 
         val alisa = Chihua()
-        val gosha = Chihua()
         alisa.makeSound(loud = false)
         alisa.givePaw()
+
+        val gosha = Chihua()
         gosha.angryLvl = 2
         gosha.givePaw()
         gosha.makeSound(loud = true)
@@ -19,7 +30,13 @@ class RenewKnowledgeTest {
         mark.makeSound(loud = true)
         mark.givePaw()
 
-        val jeck = Gsd()
+        var jeck = Gsd()
+
+        fun goWork() {
+            jeck = jeck.copy(goodBoy = false)
+        }
+
+        goWork()
         jeck.makeSound(loud = true)
         jeck.givePaw()
         jeck.pat()
@@ -28,7 +45,7 @@ class RenewKnowledgeTest {
     @Test
     fun people() {
 
-        val viktor = DogTrainer(dogs = listOf(Gsd(), Gsd(), Gsd(), Pug(), Chihua()))
+        val viktor = DogTrainer(sportDogs = listOf(Gsd(), Gsd(), Gsd(), Pug(), Chihua()))
         viktor.train()
 
         val marta = HostessDog(dogs = listOf(Gsd(), Gsd(), Gsd(), Pug(), Chihua()))
@@ -57,149 +74,6 @@ class RenewKnowledgeTest {
         king.clean()
         king.eat()
         king.pat()
-    }
-}
-
-interface Cat : PrettyKitty, GluttonyCat
-
-
-class Maykun : Cat {
-    var inLite: Boolean = true
-    override fun clean() {
-        inLite = false
-        println("hsss")
-    }
-
-    override fun eat() {
-        inLite = true
-        println("nya")
-    }
-
-    override fun pat() {
-        println(if (!inLite) "czarap" else "mrrr")
-    }
-}
-
-
-class Sphinx : Cat {
-    var happyLvl = 3
-    override fun pat() {
-        if (happyLvl <= 6) {
-            happyLvl = happyLvl + 1
-        }
-        println("mrrr")
-    }
-
-
-    override fun eat() {
-        if (happyLvl <= 5) {
-            happyLvl = happyLvl + 2
-        } else if (happyLvl <= 6) {
-            happyLvl = happyLvl + 1
-        }
-        println(" nya")
-    }
-
-    override fun clean() {
-        when {
-            happyLvl >= 2 -> {
-                happyLvl = happyLvl - 3
-            }
-            happyLvl > 1 -> {
-                happyLvl = happyLvl - 2
-            }
-            happyLvl == 0 -> {
-                happyLvl = happyLvl - 1
-            }
-        }
-    }
-}
-
-
-class UndergroundKitty : Cat {
-    override fun eat() {
-        println("nya")
-    }
-
-    override fun clean() {
-        println("IRememberThisBitch")
-    }
-
-    override fun pat() {
-        println("mrrr")
-    }
-}
-
-class Nurse(
-    private val cats: List<GluttonyCat>
-) {
-    fun giveFood() {
-        cats.forEach(fun(gluttonyCat: GluttonyCat) {
-            gluttonyCat.eat()
-        })
-        println("GluttonyCat")
-    }
-}
-
-class MistressKat(
-    private val cats: List<PrettyKitty>
-) {
-    private var morning = true
-    private var day = false
-    private var evening = false
-
-    fun setMorning() {
-        morning = true
-        day = false
-        evening = false
-    }
-
-    fun setDay() {
-        morning = false
-        day = true
-        evening = false
-    }
-
-    fun setEvening() {
-        morning = false
-        day = false
-        evening = true
-    }
-
-    private fun giveFood() {
-        startGiveFood()
-        cats.forEach(fun(prettyKitty: PrettyKitty) {
-            prettyKitty.eat()
-        })
-    }
-
-    private fun startGiveFood() {
-        println("ks ks ks ks ska")
-    }
-
-    private fun pat() {
-        println("prettyKitty")
-    }
-
-    private fun clean() {
-        cats.forEach(fun(prettyKitty: PrettyKitty) {
-            prettyKitty.clean()
-        })
-    }
-
-    fun observeTheRegime() {
-        when {
-            morning -> giveFood()
-            day -> {
-                giveFood()
-                pat()
-            }
-            evening -> {
-                giveFood()
-                clean()
-            }
-        }
-
     }
 }
 

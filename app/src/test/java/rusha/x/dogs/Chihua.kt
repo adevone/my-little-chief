@@ -1,4 +1,4 @@
-package rusha.x
+package rusha.x.dogs
 
 class Chihua : Dog {
     var angryLvl = 0
@@ -19,5 +19,4 @@ class Chihua : Dog {
     override fun pat() {
         println("Fawn")
     }
-
 }

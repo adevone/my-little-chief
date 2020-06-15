@@ -1,3 +1,3 @@
-package rusha.x
+package rusha.x.dogs
 
 interface Dog : SportDog, PrettyDog

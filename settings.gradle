@@ -1,2 +1,2 @@
-rootProject.name='My Little Chief'
-include ':app'
+rootProject.name = "My Little Chief"
+include(":app")

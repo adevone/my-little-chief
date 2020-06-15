@@ -1,4 +1,6 @@
-package rusha.x
+package rusha.x.dogs
+
+import rusha.x.dogs.Dog
 
 class Pug : Dog {
 

@@ -12,6 +12,7 @@ class ProductDetailsActivity : AppCompatActivity() {
         setContentView(R.layout.product_details_activity)
 
         val product = Product(
+            id = "0",
             name = "Огурец",
             price = 50.0,
             unit = "шт."

@@ -1,9 +1,14 @@
 package rusha.x
 
-class Basket(
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Basket(
+    val id: String,
     val items: List<Item>
 ) {
-    class Item(
+    @Serializable
+    data class Item(
         val count: Double,
         val product: Product
     )

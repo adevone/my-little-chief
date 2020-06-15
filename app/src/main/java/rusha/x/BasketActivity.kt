@@ -1,50 +1,72 @@
 package rusha.x
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.request.get
 import kotlinx.android.synthetic.main.basket_activity.*
 import kotlinx.android.synthetic.main.basket_item.view.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import org.intellij.lang.annotations.Language
 
 class BasketActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.basket_activity)
-        val basket = Basket(
-            items = listOf(
-                Basket.Item(
-                    count = 2.0,
-                    product = Product(
-                        name = "cucumber",
-                        price = 50.0,
-                        unit = "u."
-                    )
-                ),
-                Basket.Item(
-                    count = 3.0,
-                    product = Product(
-                        name = "milk",
-                        price = 30.0,
-                        unit = "lt."
-                    )
-                ),
-                Basket.Item(
-                    count = 5.0,
-                    product = Product(
-                        name = "tvorog",
-                        price = 15.0,
-                        unit = "kg."
-                    )
-                )
+
+        toRecipeButton.setOnClickListener {
+            val startRecipeDetailsIntent = Intent(this, RecipeDetailsActivity::class.java)
+            startActivity(startRecipeDetailsIntent)
+        }
+
+        /**
+         * Создаём сервис сериализации и десериализации JSON,
+         * сконфигурированный стабильной конфигурацией
+         *
+         * Стабильная конфигуация - это то, что в библиотеке kotlinx.serialization
+         * уже стабильно работает
+         *
+         * Объект такого типа можно использовать для сколько угодно многих JSON-ов
+         */
+        val json = Json {
+            ignoreUnknownKeys = true
+        }
+
+        val httpClient = HttpClient(OkHttp)
+        val scope = CoroutineScope(Dispatchers.Main)
+        scope.launch(block = {
+            val basketJson = httpClient.get<String>(
+                "https://gist.githubusercontent.com/adevone/" +
+                        "440aeb6101f17075c79282a3f054a6ed/raw/" +
+                        "ca849ec514eea9f5a2b2a3db8239c04f97df0b96/basket.json"
             )
-        )
-        val itemViewAdapter = BasketListAdapter()
-        itemViewAdapter.itemsToAdopt = basket.items
-        basketRecyclerView.adapter = itemViewAdapter
+            /**
+             * Получаем корзину из JSON, написанного в basketJson
+             */
+            val basket: Basket = json.parse(
+                /**
+                 * Для каждого типа, на котором стоит аннотация @Serializable,
+                 * генерируется функция serializer()
+                 */
+                deserializer = Basket.serializer(),
+                string = basketJson
+            )
+
+            val itemViewAdapter = BasketListAdapter()
+            itemViewAdapter.itemsToAdopt = basket.items
+            basketRecyclerView.adapter = itemViewAdapter
+        })
+
     }
 }
 
@@ -65,7 +87,6 @@ class BasketListAdapter : RecyclerView.Adapter<BasketListAdapter.ItemViewHolder>
             false
         )
         return ItemViewHolder(containerView = view)
-
     }
 
     override fun onBindViewHolder(holder: BasketListAdapter.ItemViewHolder, position: Int) {

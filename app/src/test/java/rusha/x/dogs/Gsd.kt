@@ -1,8 +1,10 @@
-package rusha.x
+package rusha.x.dogs
 
-class Gsd : Dog {
-    var isJob = true
-    var goodBoy = true
+data class Gsd(
+    val isJob: Boolean = true,
+    val goodBoy: Boolean = true
+) : Dog {
+
     override fun makeSound(loud: Boolean) {
         if (isJob == true) println(if (!loud) "Gav" else "GAV")
         else println(if (!loud) "mrrrr" else "MRRR")

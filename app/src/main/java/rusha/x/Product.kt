@@ -1,6 +1,10 @@
 package rusha.x
 
-class Product(
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Product(
+    val id: String,
     val name: String,
     val price: Double,
     val unit: String

@@ -1,4 +1,4 @@
-package rusha.x
+package rusha.x.dogs
 
 class HostessDog(
     private val dogs: List<PrettyDog>
