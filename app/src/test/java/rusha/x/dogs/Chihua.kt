@@ -7,6 +7,7 @@ class Chihua : Dog {
         else println("kus`")
     }
 
+    // [this, load] -> []
     override fun makeSound(loud: Boolean) {
         when {
             angryLvl == 0 -> println(message = if (!loud) "rrr" else "RRR")

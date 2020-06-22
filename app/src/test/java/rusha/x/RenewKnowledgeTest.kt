@@ -17,14 +17,42 @@ class RenewKnowledgeTest {
     @Test
     fun dogs() {
 
+        // invoke Chihua$new [] -> [alisa]
         val alisa = Chihua()
+
+        // store alisa [alisa] -> []
+        // load alisa [] -> [alisa]
+        // load false [alisa] -> [alisa, false]
+        // invoke Chihua$makeSound [alisa, false] -> []
         alisa.makeSound(loud = false)
+
+        // load alisa [] -> [alisa]
+        // invoke Chihua$givePaw [alisa] -> []
         alisa.givePaw()
 
+        // invoke Chihua$new [] -> [gosha]
+        // store gosha [gosha] -> []
         val gosha = Chihua()
+
+        // load gosha [] -> [gosha]
+        // load 2 [gosha] -> [gosha, 2]
+        // invoke Chihua$setAngryLvl [gosha, 2] -> []
         gosha.angryLvl = 2
+
+        // load gosha [] -> [gosha]
+        // invoke Chihua$givePaw [gosha] -> []
         gosha.givePaw()
+
+        // load gosha [] -> [gosha]
+        // load true [gosha] -> [gosha, true]
+        // invoke Chihua$makeSound [gosha, true] -> []
         gosha.makeSound(loud = true)
+
+        // load gosha [] -> [gosha]
+        // invoke Chihua$getAngryLvl [gosha] -> [angryLvl]
+        // invoke println [angryLvl] -> []
+        println(gosha.angryLvl)
+
 
         val mark = Pug()
         mark.makeSound(loud = true)
