@@ -1,6 +1,3 @@
 <resources>
     <string name="app_name">My Little Chief</string>
-    <string name="Название">Название</string>
-    <string name="Описание">Описание</string>
-    <string name="Фото">Добавить фото</string>
 </resources>

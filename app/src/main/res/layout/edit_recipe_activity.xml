@@ -22,31 +22,34 @@
                 app:title="Добавление элемента" />
 
             <EditText
-                android:id="@+id/nameItemFavorite"
+                android:id="@+id/nameRecipeEdit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="4"
-                android:text="@string/Название"
+                android:hint="Название"
                 android:textSize="32sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
             <EditText
-                android:id="@+id/descriptionItemFavorite"
+                android:id="@+id/descriptionRecipeEdit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/Описание"
+                android:hint="Описание"
                 android:textSize="32sp"
-                app:layout_constraintTop_toBottomOf="@id/nameItemFavorite" />
+                app:layout_constraintTop_toBottomOf="@id/nameRecipeEdit" />
 
 
             <androidx.recyclerview.widget.RecyclerView
-                android:layout_width="wrap_content"
+                android:id="@+id/editRecipeIngredientsView"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/descriptionItemFavorite" />
+                android:layout_marginStart="8dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintTop_toBottomOf="@id/descriptionRecipeEdit" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

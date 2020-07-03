@@ -25,8 +25,7 @@ class BasketActivity : AppCompatActivity() {
         setContentView(R.layout.basket_activity)
 
         toRecipeButton.setOnClickListener {
-            val startRecipeDetailsIntent = Intent(this, RecipeDetailsActivity::class.java)
-            startActivity(startRecipeDetailsIntent)
+            startActivity(Intent(this, RecipeDetailsActivity::class.java))
         }
 
         /**
