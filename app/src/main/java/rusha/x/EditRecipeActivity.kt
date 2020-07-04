@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -17,8 +16,56 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import summer.SummerPresenter
+import summer.android.SummerActivity
 
-class EditRecipeActivity : AppCompatActivity() {
+interface EditRecipeView {
+    var ingredients: List<CreateOrEditRecipe.Ingredient>
+}
+
+class EditRecipeViewPresenter : SummerPresenter<EditRecipeView>() {
+
+    override val viewProxy = object : EditRecipeView {
+        override var ingredients by state({ it::ingredients }, initial = emptyList())
+    }
+
+    override fun onEnter() {
+        super.onEnter()
+
+        val ingredients: List<CreateOrEditRecipe.Ingredient> = listOf(
+            CreateOrEditRecipe.Ingredient(
+                countInRecipe = 3.0,
+                product = CreateOrEditProductByName(
+                    name = "trupDevstvenici",
+                    price = 5.0,
+                    unit = "u."
+                )
+            ),
+            CreateOrEditRecipe.Ingredient(
+                countInRecipe = 5.0,
+                product = CreateOrEditProductByName(
+                    name = "nozgik",
+                    price = 1.0,
+                    unit = "u."
+                )
+            )
+        )
+
+        viewProxy.ingredients = ingredients
+    }
+
+}
+
+class EditRecipeActivity : SummerActivity(), EditRecipeView {
+
+    private val presenter by bindPresenter { EditRecipeViewPresenter() }
+
+    override var ingredients: List<CreateOrEditRecipe.Ingredient> by didSet {
+        ingredientsViewAdapter.ingredientsToAdopt = ingredients
+        ingredientsViewAdapter.notifyDataSetChanged()
+    }
+
+    private val ingredientsViewAdapter = EditRecipeIngredientsAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,36 +95,16 @@ class EditRecipeActivity : AppCompatActivity() {
             })
         }
 
-        val ingredients: List<CreateOrEditRecipe.Ingredient> = listOf(
-            CreateOrEditRecipe.Ingredient(
-                countInRecipe = 3.0,
-                product = CreateOrEditProductByName(
-                    name = "trupDevstvenici",
-                    price = 5.0,
-                    unit = "u."
-                )
-            ),
-            CreateOrEditRecipe.Ingredient(
-                countInRecipe = 5.0,
-                product = CreateOrEditProductByName(
-                    name = "nozgik",
-                    price = 1.0,
-                    unit = "u."
-                )
-            )
-        )
-
-        val ingredientViewAdapter = EditRecipeIngredientsAdapter()
-        ingredientViewAdapter.ingredientToAdopt = ingredients
-        editRecipeIngredientsView.adapter = ingredientViewAdapter
+        editRecipeIngredientsView.adapter = ingredientsViewAdapter
     }
 }
 
-class EditRecipeIngredientsAdapter : RecyclerView.Adapter<EditRecipeIngredientsAdapter.IngredientViewHolder>() {
+class EditRecipeIngredientsAdapter :
+    RecyclerView.Adapter<EditRecipeIngredientsAdapter.IngredientViewHolder>() {
 
-    var ingredientToAdopt: List<CreateOrEditRecipe.Ingredient> = emptyList()
+    var ingredientsToAdopt: List<CreateOrEditRecipe.Ingredient> = emptyList()
     override fun getItemCount(): Int {
-        return ingredientToAdopt.size
+        return ingredientsToAdopt.size
     }
 
     override fun onCreateViewHolder(
@@ -93,7 +120,7 @@ class EditRecipeIngredientsAdapter : RecyclerView.Adapter<EditRecipeIngredientsA
     }
 
     override fun onBindViewHolder(holder: IngredientViewHolder, position: Int) {
-        val ingredientOnPosition = ingredientToAdopt.get(index = position)
+        val ingredientOnPosition = ingredientsToAdopt.get(index = position)
         holder.bind(ingredient = ingredientOnPosition)
     }
 
