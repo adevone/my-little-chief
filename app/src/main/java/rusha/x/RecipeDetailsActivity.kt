@@ -1,7 +1,5 @@
 package rusha.x
 
-// импортировали класс АппКомпатАктивити, чтобы его использовать здесь (в этом файле)
-
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,63 +13,49 @@ import kotlinx.android.synthetic.main.recipe_details_activity.*
 import kotlinx.android.synthetic.main.recipe_details_item.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import summer.android.SummerActivity
 
-// класс реципеДетАкт наследует все свойства аппКомпатАктивити т.е все его переменные и функции
-// TODO для каждого RecipeDetailsActivity, являющегося AppCompatActivity
-class RecipeDetailsActivity : AppCompatActivity() {
-    // мы переопределяем onCreate, чтобы сделать доп. действия при создании активити
-    // TODO определяем, что в отличие от других AppCompatActivity, RecipeDetailsActivity onCreate
-    override fun onCreate(
-        // TODO , принимая savedInstanceState, являющееся необязательным Bundle,
-        savedInstanceState: Bundle?
-    ) {
-        // TODO сначала делает onCreate как AppCompatActivity с savedInstanceState
-        super.onCreate(savedInstanceState)
+interface RecipeDetailsView {
+    var recipeName: String
+    var ingredients: List<Recipe.Ingredient>
+}
 
-        // задаем верстку при помощи функции setContentView
-        // TODO после делает setContentView, передавая ему в качестве
-        // TODO layoutResID recipe_details_activity из layout из R
-        setContentView(R.layout.recipe_details_activity)
+class RecipeDetailsPresenter(
+    private val recipe: Recipe
+) : BasePresenter<RecipeDetailsView>() {
 
-        val json = Json {
-            ignoreUnknownKeys = true
-        }
-
-        val httpClient = HttpClient(OkHttp)
-
-        //создание адаптера-ingredientsViewAdapter, кладем обьект(который ведет себя так как мы описали
-        // в классе IngredientsListAdapter   типа IngredientsListAdapter в эту переменную
-        //правила работы которого описаны в IngredientsListAdapter
-        //TODO ingredientsViewAdapter будет получен в результате создания IngredientsListAdapter
-        val ingredientsViewAdapter = IngredientsListAdapter()
-
-        val scope = CoroutineScope(Dispatchers.Main)
-        scope.launch(block = {
-            val recipeJson = httpClient.get<String>(
-                "https://gist.githubusercontent.com/adevone/" +
-                        "440aeb6101f17075c79282a3f054a6ed/raw/" +
-                        "ca849ec514eea9f5a2b2a3db8239c04f97df0b96/funnyLifeRecipe.json"
-            )
-            val funnyLifeRecipe = json.parse(
-                deserializer = Recipe.serializer(),
-                string = recipeJson
-            )
-
-            //говорим какой список ингр. будет отображать тот адаптер который описали выше. А в ingredientsToAdopt
-            //лежит потенциальный список ингр.
-            //TODO ingredientsToAdopt ingredientsViewAdapter(-a) это теперь тоже самое что и funnyLifeIngredients
-            ingredientsViewAdapter.ingredientsToAdopt = funnyLifeRecipe.ingredients
-
-            //ingredientsView- это название и обращение к списку ингриндиентов в xml
-            //это переменная,в которой лежит описание того как отображаются ячейки списка
-            //в переменную ingredientsView мы записываем тот адаптер который создали выше
-            //TODO adapter ingredientsView тоже самое ingredientsViewAdapter
-            ingredientsView.adapter = ingredientsViewAdapter
-        })
+    override val viewProxy = object : RecipeDetailsView {
+        override var recipeName by state({ it::recipeName }, initial = "")
+        override var ingredients by state({ it::ingredients }, initial = emptyList())
     }
+
+    override fun onEnter() {
+        super.onEnter()
+        viewProxy.recipeName = recipe.name
+        viewProxy.ingredients = recipe.ingredients
+    }
+
+}
+
+class RecipeDetailsActivity : SummerActivity(), RecipeDetailsView {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.recipe_details_activity)
+    }
+
+    override var recipeName: String by didSet {
+        nameView.text = recipeName
+    }
+
+    override var ingredients: List<Recipe.Ingredient> by didSet {
+        val ingredientsViewAdapter = IngredientsListAdapter()
+        ingredientsViewAdapter.ingredientsToAdopt = ingredients
+        ingredientsView.adapter = ingredientsViewAdapter
+    }
+
 }
 
 /**

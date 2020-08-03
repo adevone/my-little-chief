@@ -6,14 +6,32 @@ import kotlinx.serialization.Serializable
 data class CreateOrEditRecipe(
     val id: Int? = null,
     val name: String,
-    val portionsCount: Int,
-    val ingredient: List<Ingredient>
+    val description: String,
+    val ingredients: List<Ingredient>
 ) {
     @Serializable
     data class Ingredient(
         val countInRecipe: Double,
         val product: CreateOrEditProductByName
-    )
+    ) {
+        fun withIncrementCount(): Ingredient {
+            return copy(
+                countInRecipe = countInRecipe + 1
+            )
+        }
+
+        fun withDecrementCount(): Ingredient {
+            return copy(
+                countInRecipe = (countInRecipe - 1).coerceAtLeast(minimumValue = 0.0)
+            )
+        }
+
+        fun withCount(count: Double): Ingredient {
+            return copy(
+                countInRecipe = count
+            )
+        }
+    }
 }
 
 @Serializable

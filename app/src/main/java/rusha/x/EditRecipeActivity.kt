@@ -12,27 +12,34 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.android.synthetic.main.edit_recipe_activity.*
 import kotlinx.android.synthetic.main.edit_recipe_ingredient.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import summer.SummerPresenter
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
+import org.kodein.di.singleton
 import summer.android.SummerActivity
 
 interface EditRecipeView {
     var ingredients: List<CreateOrEditRecipe.Ingredient>
+    var recipeName: String
+    var recipeDescription: String
 }
 
-class EditRecipeViewPresenter : SummerPresenter<EditRecipeView>() {
+class EditRecipeViewPresenter : BasePresenter<EditRecipeView>() {
+    private val json by di.instance<Json>()
+    private val httpClient by di.instance<HttpClient>()
 
     override val viewProxy = object : EditRecipeView {
         override var ingredients by state({ it::ingredients }, initial = emptyList())
+        override var recipeName by state({ it::recipeName }, initial = "")
+        override var recipeDescription by state({ it::recipeDescription }, initial = "")
     }
 
     override fun onEnter() {
         super.onEnter()
 
-        val ingredients: List<CreateOrEditRecipe.Ingredient> = listOf(
+        val initialIngredients: List<CreateOrEditRecipe.Ingredient> = listOf(
             CreateOrEditRecipe.Ingredient(
                 countInRecipe = 3.0,
                 product = CreateOrEditProductByName(
@@ -51,9 +58,64 @@ class EditRecipeViewPresenter : SummerPresenter<EditRecipeView>() {
             )
         )
 
-        viewProxy.ingredients = ingredients
+        viewProxy.ingredients = initialIngredients
     }
 
+    fun onIngredientPlusClick(ingredient: CreateOrEditRecipe.Ingredient) {
+        viewProxy.ingredients = viewProxy.ingredients.map { currentIngredient ->
+            if (currentIngredient == ingredient)
+                currentIngredient.withIncrementCount()
+            else
+                currentIngredient
+        }
+    }
+
+    fun onIngredientMinusClick(ingredient: CreateOrEditRecipe.Ingredient) {
+        viewProxy.ingredients = viewProxy.ingredients.map { currentIngredient ->
+            if (currentIngredient == ingredient)
+                currentIngredient.withDecrementCount()
+            else
+                currentIngredient
+        }
+    }
+
+    fun onSetIngredientCount(ingredient: CreateOrEditRecipe.Ingredient, count: Double) {
+        viewProxy.ingredients = viewProxy.ingredients.map { currentIngredient ->
+            if (currentIngredient == ingredient)
+                currentIngredient.withCount(count)
+            else
+                currentIngredient
+        }
+    }
+
+    private var recipeName: String = ""
+    fun onSetRecipeName(name: String) {
+        recipeName = name
+    }
+
+    private var recipeDescription: String = ""
+    fun onSetRecipeDescription(description: String) {
+        recipeDescription = description
+    }
+
+    fun onSaveClick() {
+        launch(block = {
+            val createOrEditRecipe = CreateOrEditRecipe(
+                name = recipeName,
+                description = recipeDescription,
+                ingredients = viewProxy.ingredients
+            )
+            val createOrEditRecipeJson = json.stringify(
+                CreateOrEditRecipe.serializer(),
+                createOrEditRecipe
+            )
+            httpClient.put<Unit>("http://10.0.2.2:9999/recipe") {
+                contentType(ContentType.Application.Json)
+                body = createOrEditRecipeJson
+            }
+            //finish()
+        })
+    }
 }
 
 class EditRecipeActivity : SummerActivity(), EditRecipeView {
@@ -65,42 +127,46 @@ class EditRecipeActivity : SummerActivity(), EditRecipeView {
         ingredientsViewAdapter.notifyDataSetChanged()
     }
 
-    private val ingredientsViewAdapter = EditRecipeIngredientsAdapter()
+    override var recipeName: String by didSet {
+        nameRecipeEdit.setText(recipeName)
+    }
+
+    override var recipeDescription: String by didSet {
+        descriptionRecipeEdit.setText(recipeDescription)
+    }
+
+    private lateinit var ingredientsViewAdapter: EditRecipeIngredientsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.edit_recipe_activity)
 
-        val json = Json {
-            ignoreUnknownKeys = true
-        }
-        val httpClient = HttpClient(OkHttp)
         save.setOnClickListener {
-            val scope = CoroutineScope(Dispatchers.Main)
-            scope.launch(block = {
-                val createOrEditRecipe = CreateOrEditRecipe(
-                    name = nameRecipeEdit.text.toString(),
-                    portionsCount = 1,
-                    ingredient = listOf()
-                )
-                val createOrEditRecipeJson = json.stringify(
-                    CreateOrEditRecipe.serializer(),
-                    createOrEditRecipe
-                )
-                httpClient.put<Unit>("http://10.0.2.2:9999/recipe") {
-                    contentType(ContentType.Application.Json)
-                    body = createOrEditRecipeJson
-                }
-                finish()
-            })
+            presenter.onSaveClick()
         }
 
+        nameRecipeEdit.setOnFocusChangeListener { v, hasFocus ->
+            if (!hasFocus) {
+                val name = nameRecipeEdit.text.toString()
+                presenter.onSetRecipeName(name)
+            }
+        }
+
+        descriptionRecipeEdit.setOnFocusChangeListener { v, hasFocus ->
+            if (!hasFocus) {
+                val description = descriptionRecipeEdit.text.toString()
+                presenter.onSetRecipeDescription(description)
+            }
+        }
+
+        ingredientsViewAdapter = EditRecipeIngredientsAdapter(presenter)
         editRecipeIngredientsView.adapter = ingredientsViewAdapter
     }
 }
 
-class EditRecipeIngredientsAdapter :
-    RecyclerView.Adapter<EditRecipeIngredientsAdapter.IngredientViewHolder>() {
+class EditRecipeIngredientsAdapter(
+    private val presenter: EditRecipeViewPresenter
+) : RecyclerView.Adapter<EditRecipeIngredientsAdapter.IngredientViewHolder>() {
 
     var ingredientsToAdopt: List<CreateOrEditRecipe.Ingredient> = emptyList()
     override fun getItemCount(): Int {
@@ -124,12 +190,50 @@ class EditRecipeIngredientsAdapter :
         holder.bind(ingredient = ingredientOnPosition)
     }
 
-    class IngredientViewHolder(
+    inner class IngredientViewHolder(
         val containerView: View
     ) : RecyclerView.ViewHolder(containerView) {
+
         fun bind(ingredient: CreateOrEditRecipe.Ingredient) {
             containerView.addIngredient.setText(ingredient.product.name)
             containerView.ingredientCount.setText(ingredient.countInRecipe.toString())
+
+            containerView.plus.setOnClickListener {
+                presenter.onIngredientPlusClick(ingredient)
+            }
+
+            containerView.minus.setOnClickListener {
+                presenter.onIngredientMinusClick(ingredient)
+            }
+
+            containerView.ingredientCount.setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    val count = containerView.ingredientCount.text.toString().toDouble()
+                    presenter.onSetIngredientCount(ingredient, count)
+                }
+            }
         }
+    }
+}
+
+val di = DI {
+
+    bind<Json>() with singleton {
+        /**
+         * Создаём сервис сериализации и десериализации JSON,
+         * сконфигурированный стабильной конфигурацией
+         *
+         * Стабильная конфигуация - это то, что в библиотеке kotlinx.serialization
+         * уже стабильно работает
+         *
+         * Объект такого типа можно использовать для сколько угодно многих JSON-ов
+         */
+        Json {
+            ignoreUnknownKeys = true
+        }
+    }
+
+    bind<HttpClient>() with singleton {
+        HttpClient(OkHttp)
     }
 }

@@ -8,47 +8,36 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.request.get
 import kotlinx.android.synthetic.main.basket_activity.*
 import kotlinx.android.synthetic.main.basket_item.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import org.intellij.lang.annotations.Language
+import org.kodein.di.instance
+import summer.android.SummerActivity
 
-class BasketActivity : AppCompatActivity() {
+interface BasketView {
+    var basketItems: List<Basket.Item>
+}
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.basket_activity)
+class BasketPresenter : BasePresenter<BasketView>() {
+    private val json by di.instance<Json>()
+    private val httpClient by di.instance<HttpClient>()
 
-        toRecipeButton.setOnClickListener {
-            startActivity(Intent(this, RecipeDetailsActivity::class.java))
-        }
+    override val viewProxy = object : BasketView {
+        override var basketItems by state({ it::basketItems }, initial = emptyList())
+    }
 
-        /**
-         * Создаём сервис сериализации и десериализации JSON,
-         * сконфигурированный стабильной конфигурацией
-         *
-         * Стабильная конфигуация - это то, что в библиотеке kotlinx.serialization
-         * уже стабильно работает
-         *
-         * Объект такого типа можно использовать для сколько угодно многих JSON-ов
-         */
-        val json = Json {
-            ignoreUnknownKeys = true
-        }
-
-        val httpClient = HttpClient(OkHttp)
-        val scope = CoroutineScope(Dispatchers.Main)
-        scope.launch(block = {
+    override fun onEnter() {
+        super.onEnter()
+        //launch посредник, который позволяет запускать прерываемые задачи в непрерываемых
+        launch {
             val basketJson = httpClient.get<String>(
                 "https://gist.githubusercontent.com/adevone/" +
                         "440aeb6101f17075c79282a3f054a6ed/raw/" +
                         "ca849ec514eea9f5a2b2a3db8239c04f97df0b96/basket.json"
             )
+
             /**
              * Получаем корзину из JSON, написанного в basketJson
              */
@@ -61,11 +50,55 @@ class BasketActivity : AppCompatActivity() {
                 string = basketJson
             )
 
-            val itemViewAdapter = BasketListAdapter()
-            itemViewAdapter.itemsToAdopt = basket.items
-            basketRecyclerView.adapter = itemViewAdapter
-        })
+            viewProxy.basketItems = basket.items
+        }
+    }
 
+}
+
+// класс BasketActivity наследует все свойства SummerActivity т.е все его переменные и функции
+// TODO для каждого BasketActivity, являющегося SummerActivity
+class BasketActivity : SummerActivity(), BasketView {
+
+    private val presenter by bindPresenter { BasketPresenter() }
+
+    // мы переопределяем onCreate, чтобы сделать доп. действия при создании активити
+    // TODO определяем, что в отличие от других SummerActivity, BasketActivity onCreate
+    override fun onCreate(
+        // TODO , принимая savedInstanceState, являющееся необязательным Bundle,
+        savedInstanceState: Bundle?
+    ) {
+        // TODO сначала делает onCreate как SummerActivity с savedInstanceState
+        super.onCreate(savedInstanceState)
+
+        // задаем верстку при помощи функции setContentView
+        // TODO после делает setContentView, передавая ему в качестве
+        // TODO layoutResID basket_activity из layout из R
+        setContentView(R.layout.basket_activity)
+
+        toRecipeButton.setOnClickListener {
+            startActivity(Intent(this, RecipeDetailsActivity::class.java))
+        }
+    }
+
+    override var basketItems: List<Basket.Item> by didSet {
+
+        //создание адаптера-itemViewAdapter, кладем обьект(который ведет себя так как мы описали
+        // в классе BasketListAdapter   типа BasketListAdapter в эту переменную
+        //правила работы которого описаны в BasketListAdapter
+        //TODO itemViewAdapter будет получен в результате создания BasketListAdapter
+        val itemViewAdapter = BasketListAdapter()
+
+        // говорим какой список элементов корзины будет отображать тот адаптер который описали выше.
+        // А в itemsToAdopt лежит потенциальный список ингр.
+        // TODO itemsToAdopt itemViewAdapter(-a) это теперь тоже самое что и basketItems
+        itemViewAdapter.itemsToAdopt = basketItems
+
+        //basketRecyclerView- это название и обращение к списку элементов корзины в xml
+        //это переменная, в которой лежит описание того как отображаются ячейки списка
+        //в переменную basketRecyclerView мы записываем тот адаптер который создали выше
+        //TODO adapter basketRecyclerView тоже самое itemViewAdapter
+        basketRecyclerView.adapter = itemViewAdapter
     }
 }
 
