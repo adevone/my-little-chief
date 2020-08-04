@@ -18,6 +18,7 @@ import summer.android.SummerActivity
 
 interface BasketView {
     var basketItems: List<Basket.Item>
+    val goToRecipe: () -> Unit
 }
 
 class BasketPresenter : BasePresenter<BasketView>() {
@@ -26,6 +27,7 @@ class BasketPresenter : BasePresenter<BasketView>() {
 
     override val viewProxy = object : BasketView {
         override var basketItems by state({ it::basketItems }, initial = emptyList())
+        override val goToRecipe = event { it.goToRecipe }.doExactlyOnce()
     }
 
     override fun onEnter() {
@@ -54,6 +56,10 @@ class BasketPresenter : BasePresenter<BasketView>() {
         }
     }
 
+    fun onToRecipeClick() {
+        viewProxy.goToRecipe()
+    }
+
 }
 
 // класс BasketActivity наследует все свойства SummerActivity т.е все его переменные и функции
@@ -77,7 +83,7 @@ class BasketActivity : SummerActivity(), BasketView {
         setContentView(R.layout.basket_activity)
 
         toRecipeButton.setOnClickListener {
-            startActivity(Intent(this, RecipeDetailsActivity::class.java))
+            presenter.onToRecipeClick()
         }
     }
 
@@ -99,6 +105,10 @@ class BasketActivity : SummerActivity(), BasketView {
         //в переменную basketRecyclerView мы записываем тот адаптер который создали выше
         //TODO adapter basketRecyclerView тоже самое itemViewAdapter
         basketRecyclerView.adapter = itemViewAdapter
+    }
+
+    override val goToRecipe = {
+        startActivity(Intent(this, RecipeDetailsActivity::class.java))
     }
 }
 

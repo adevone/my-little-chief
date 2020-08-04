@@ -5,50 +5,45 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.request.get
 import kotlinx.android.synthetic.main.recipe_list_activity.*
 import kotlinx.android.synthetic.main.recipe_list_item.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.builtins.list
 import kotlinx.serialization.json.Json
+import org.kodein.di.instance
+import summer.android.SummerActivity
 
-class RecipeListActivity : AppCompatActivity() {
+interface RecipeListView {
+    var recipes: List<Recipe>
+    var isRefreshing: Boolean
+    val goToEditRecipe: () -> Unit
+}
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.recipe_list_activity)
+class RecipeListPresenter : BasePresenter<RecipeListView>() {
 
-        addRecipeButton.setOnClickListener {
-            startActivity(Intent(this, EditRecipeActivity::class.java))
-        }
+    private val json by di.instance<Json>()
+    private val httpClient by di.instance<HttpClient>()
 
-        swipeRefreshLayout.setOnRefreshListener {
-            refreshOnRecipeList()
-        }
+    override val viewProxy = object : RecipeListView {
+        override var recipes by state({ it::recipes }, initial = emptyList())
+        override var isRefreshing by state({ it::isRefreshing }, initial = false)
+        override val goToEditRecipe = event { it.goToEditRecipe }.doExactlyOnce()
     }
 
-    override fun onResume() {
-        super.onResume()
-        refreshOnRecipeList()
+    fun onRefresh() {
+        updateRecipes()
     }
 
-    fun refreshOnRecipeList() {
-        swipeRefreshLayout.isRefreshing = true
+    fun onResume() {
+        updateRecipes()
+    }
 
-        val json = Json {
-            ignoreUnknownKeys = true
-        }
-        val httpClient = HttpClient(OkHttp)
-        val recipesViewAdapter = RecipesListAdapter()
-
-        val scope = CoroutineScope(Dispatchers.Main)
-        scope.launch(block = {
+    private fun updateRecipes() {
+        viewProxy.isRefreshing = true
+        launch {
             val recipesJson = httpClient.get<String>(
                 "http://10.0.2.2:9999/recipe/all"
             )
@@ -56,11 +51,50 @@ class RecipeListActivity : AppCompatActivity() {
                 deserializer = Recipe.serializer().list,
                 string = recipesJson
             )
-            recipesViewAdapter.recipesToAdopt = allRecipes
-            recipesView.adapter = recipesViewAdapter
+            viewProxy.recipes = allRecipes
+            viewProxy.isRefreshing = false
+        }
+    }
 
-            swipeRefreshLayout.isRefreshing = false
-        })
+    fun onAddRecipeClick() {
+        viewProxy.goToEditRecipe()
+    }
+}
+
+class RecipeListActivity : SummerActivity(), RecipeListView {
+
+    private val presenter by bindPresenter { RecipeListPresenter() }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.recipe_list_activity)
+
+        addRecipeButton.setOnClickListener {
+            presenter.onAddRecipeClick()
+        }
+
+        swipeRefreshLayout.setOnRefreshListener {
+            presenter.onRefresh()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        presenter.onResume()
+    }
+
+    override var recipes: List<Recipe> by didSet {
+        val recipesViewAdapter = RecipesListAdapter()
+        recipesViewAdapter.recipesToAdopt = recipes
+        recipesView.adapter = recipesViewAdapter
+    }
+
+    override var isRefreshing: Boolean by didSet {
+        swipeRefreshLayout.isRefreshing = isRefreshing
+    }
+
+    override val goToEditRecipe = {
+        startActivity(Intent(this, EditRecipeActivity::class.java))
     }
 }
 
