@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -15,10 +17,13 @@ import kotlinx.android.synthetic.main.edit_recipe_ingredient.view.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.kodein.di.DI
+import org.kodein.di.TT
 import org.kodein.di.bind
+import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.singleton
 import summer.android.SummerActivity
+import summer.android.SummerFragment
 
 interface EditRecipeView {
     var ingredients: List<CreateOrEditRecipe.Ingredient>
@@ -118,9 +123,21 @@ class EditRecipeViewPresenter : BasePresenter<EditRecipeView>() {
     }
 }
 
-class EditRecipeActivity : SummerActivity(), EditRecipeView {
+class EditRecipeFragment : SummerFragment(), EditRecipeView {
 
     private val presenter by bindPresenter { EditRecipeViewPresenter() }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(
+            R.layout.edit_recipe_activity,
+            container,
+            false
+        )
+    }
 
     override var ingredients: List<CreateOrEditRecipe.Ingredient> by didSet {
         ingredientsViewAdapter.ingredientsToAdopt = ingredients
@@ -139,7 +156,6 @@ class EditRecipeActivity : SummerActivity(), EditRecipeView {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.edit_recipe_activity)
 
         save.setOnClickListener {
             presenter.onSaveClick()

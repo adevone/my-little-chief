@@ -1,10 +1,10 @@
 package rusha.x
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.builtins.list
 import kotlinx.serialization.json.Json
 import org.kodein.di.instance
-import summer.android.SummerActivity
+import summer.android.SummerFragment
 
 interface RecipeListView {
     var recipes: List<Recipe>
@@ -61,13 +61,12 @@ class RecipeListPresenter : BasePresenter<RecipeListView>() {
     }
 }
 
-class RecipeListActivity : SummerActivity(), RecipeListView {
+class RecipeListFragment : SummerFragment(R.layout.recipe_list_activity), RecipeListView {
 
     private val presenter by bindPresenter { RecipeListPresenter() }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.recipe_list_activity)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         addRecipeButton.setOnClickListener {
             presenter.onAddRecipeClick()
@@ -94,40 +93,41 @@ class RecipeListActivity : SummerActivity(), RecipeListView {
     }
 
     override val goToEditRecipe = {
-        startActivity(Intent(this, EditRecipeActivity::class.java))
+        TODO("startActivity(Intent(this, EditRecipeActivity::class.java))")
     }
 }
 
-class RecipesListAdapter : RecyclerView.Adapter<RecipesViewHolder>() {
+class RecipesListAdapter : RecyclerView.Adapter<RecipesListAdapter.ViewHolder>() {
     var recipesToAdopt: List<Recipe> = listOf()
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): RecipesViewHolder {
+    ): RecipesListAdapter.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val view = inflater.inflate(
             R.layout.recipe_list_item,
             parent,
             false
         )
-        return RecipesViewHolder(cellView = view)
+        return ViewHolder(cellView = view)
     }
 
     override fun getItemCount(): Int {
         return recipesToAdopt.size
     }
 
-    override fun onBindViewHolder(holder: RecipesViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecipesListAdapter.ViewHolder, position: Int) {
         val recipeOnPosition = recipesToAdopt.get(index = position)
         holder.bind(recipe = recipeOnPosition)
     }
-}
 
-class RecipesViewHolder(
-    val cellView: View
-) : RecyclerView.ViewHolder(cellView) {
-    fun bind(recipe: Recipe) {
-        cellView.recipesItem.text = recipe.name
+    inner class ViewHolder(
+        val cellView: View
+    ) : RecyclerView.ViewHolder(cellView) {
+
+        fun bind(recipe: Recipe) {
+            cellView.recipesItem.text = recipe.name
+        }
     }
 }

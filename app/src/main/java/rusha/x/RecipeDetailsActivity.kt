@@ -4,58 +4,44 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.RecyclerView
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.request.get
 import kotlinx.android.synthetic.main.recipe_details_activity.*
 import kotlinx.android.synthetic.main.recipe_details_item.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import summer.android.SummerActivity
 
-interface RecipeDetailsView {
-    var recipeName: String
-    var ingredients: List<Recipe.Ingredient>
+class RecipeDetailsViewModel : ViewModel() {
+    val recipeNameLiveData = MutableLiveData<String>("")
+    val ingredientsLiveData = MutableLiveData<List<Recipe.Ingredient>>()
+
+    fun init(recipe: Recipe) {
+        recipeNameLiveData.value = recipe.name
+        ingredientsLiveData.value = recipe.ingredients
+    }
 }
 
-class RecipeDetailsPresenter(
-    private val recipe: Recipe
-) : BasePresenter<RecipeDetailsView>() {
-
-    override val viewProxy = object : RecipeDetailsView {
-        override var recipeName by state({ it::recipeName }, initial = "")
-        override var ingredients by state({ it::ingredients }, initial = emptyList())
-    }
-
-    override fun onEnter() {
-        super.onEnter()
-        viewProxy.recipeName = recipe.name
-        viewProxy.ingredients = recipe.ingredients
-    }
-
-}
-
-class RecipeDetailsActivity : SummerActivity(), RecipeDetailsView {
+class RecipeDetailsFragment : Fragment(R.layout.recipe_details_activity) {
+    private lateinit var viewModel: RecipeDetailsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.recipe_details_activity)
-    }
+        viewModel = ViewModelProvider(this).get(RecipeDetailsViewModel::class.java)
+//        viewModel.init(recipe = ...)
 
-    override var recipeName: String by didSet {
-        nameView.text = recipeName
-    }
+        viewModel.recipeNameLiveData.observe(this, Observer { recipeName ->
+            nameView.text = recipeName
+        })
 
-    override var ingredients: List<Recipe.Ingredient> by didSet {
-        val ingredientsViewAdapter = IngredientsListAdapter()
-        ingredientsViewAdapter.ingredientsToAdopt = ingredients
-        ingredientsView.adapter = ingredientsViewAdapter
+        viewModel.ingredientsLiveData.observe(this, Observer { ingredients ->
+            val ingredientsViewAdapter = IngredientsListAdapter()
+            ingredientsViewAdapter.ingredientsToAdopt = ingredients
+            ingredientsView.adapter = ingredientsViewAdapter
+        })
     }
-
 }
 
 /**

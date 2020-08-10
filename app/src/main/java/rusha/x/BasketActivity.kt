@@ -6,6 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -16,99 +22,82 @@ import kotlinx.serialization.json.Json
 import org.kodein.di.instance
 import summer.android.SummerActivity
 
-interface BasketView {
-    var basketItems: List<Basket.Item>
-    val goToRecipe: () -> Unit
-}
-
-class BasketPresenter : BasePresenter<BasketView>() {
+class BasketViewModel : ViewModel() {
     private val json by di.instance<Json>()
     private val httpClient by di.instance<HttpClient>()
 
-    override val viewProxy = object : BasketView {
-        override var basketItems by state({ it::basketItems }, initial = emptyList())
-        override val goToRecipe = event { it.goToRecipe }.doExactlyOnce()
-    }
+    val basketItemsLiveData = MutableLiveData<List<Basket.Item>>(emptyList())
+    val goToRecipeLiveEvent = SingleLiveEvent<Nothing>()
 
-    override fun onEnter() {
-        super.onEnter()
-        //launch посредник, который позволяет запускать прерываемые задачи в непрерываемых
-        launch {
+    init {
+        viewModelScope.launch {
             val basketJson = httpClient.get<String>(
                 "https://gist.githubusercontent.com/adevone/" +
                         "440aeb6101f17075c79282a3f054a6ed/raw/" +
                         "ca849ec514eea9f5a2b2a3db8239c04f97df0b96/basket.json"
             )
-
-            /**
-             * Получаем корзину из JSON, написанного в basketJson
-             */
             val basket: Basket = json.parse(
-                /**
-                 * Для каждого типа, на котором стоит аннотация @Serializable,
-                 * генерируется функция serializer()
-                 */
                 deserializer = Basket.serializer(),
                 string = basketJson
             )
 
-            viewProxy.basketItems = basket.items
+            basketItemsLiveData.value = basket.items
         }
     }
 
     fun onToRecipeClick() {
-        viewProxy.goToRecipe()
+        goToRecipeLiveEvent.call()
     }
-
 }
 
-// класс BasketActivity наследует все свойства SummerActivity т.е все его переменные и функции
-// TODO для каждого BasketActivity, являющегося SummerActivity
-class BasketActivity : SummerActivity(), BasketView {
-
-    private val presenter by bindPresenter { BasketPresenter() }
-
+// класс BasketActivity наследует все свойства AppCompatActivity т.е все его переменные и функции
+// TODO для каждого BasketActivity, являющегося AppCompatActivity
+class BasketFragment : Fragment(R.layout.basket_activity) {
+    private lateinit var viewModel: BasketViewModel
     // мы переопределяем onCreate, чтобы сделать доп. действия при создании активити
-    // TODO определяем, что в отличие от других SummerActivity, BasketActivity onCreate
+    // TODO определяем, что в отличие от других AppCompatActivity, BasketActivity onCreate
     override fun onCreate(
         // TODO , принимая savedInstanceState, являющееся необязательным Bundle,
         savedInstanceState: Bundle?
     ) {
-        // TODO сначала делает onCreate как SummerActivity с savedInstanceState
+        // TODO сначала делает onCreate как AppCompatActivity с savedInstanceState
         super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(this).get(BasketViewModel::class.java)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         // задаем верстку при помощи функции setContentView
         // TODO после делает setContentView, передавая ему в качестве
         // TODO layoutResID basket_activity из layout из R
-        setContentView(R.layout.basket_activity)
 
         toRecipeButton.setOnClickListener {
-            presenter.onToRecipeClick()
+            viewModel.onToRecipeClick()
         }
-    }
 
-    override var basketItems: List<Basket.Item> by didSet {
+        viewModel.basketItemsLiveData.observe(viewLifecycleOwner, Observer { basketItems ->
+            //создание адаптера-itemViewAdapter, кладем обьект(который ведет себя так как мы описали
+            // в классе BasketListAdapter   типа BasketListAdapter в эту переменную
+            //правила работы которого описаны в BasketListAdapter
+            //TODO itemViewAdapter будет получен в результате создания BasketListAdapter
+            val itemViewAdapter = BasketListAdapter()
 
-        //создание адаптера-itemViewAdapter, кладем обьект(который ведет себя так как мы описали
-        // в классе BasketListAdapter   типа BasketListAdapter в эту переменную
-        //правила работы которого описаны в BasketListAdapter
-        //TODO itemViewAdapter будет получен в результате создания BasketListAdapter
-        val itemViewAdapter = BasketListAdapter()
+            // говорим какой список элементов корзины будет отображать тот адаптер который описали выше.
+            // А в itemsToAdopt лежит потенциальный список ингр.
+            // TODO itemsToAdopt itemViewAdapter(-a) это теперь тоже самое что и basketItems
+            itemViewAdapter.itemsToAdopt = basketItems
 
-        // говорим какой список элементов корзины будет отображать тот адаптер который описали выше.
-        // А в itemsToAdopt лежит потенциальный список ингр.
-        // TODO itemsToAdopt itemViewAdapter(-a) это теперь тоже самое что и basketItems
-        itemViewAdapter.itemsToAdopt = basketItems
+            //basketRecyclerView- это название и обращение к списку элементов корзины в xml
+            //это переменная, в которой лежит описание того как отображаются ячейки списка
+            //в переменную basketRecyclerView мы записываем тот адаптер который создали выше
+            //TODO adapter basketRecyclerView тоже самое itemViewAdapter
+            basketRecyclerView.adapter = itemViewAdapter
+        })
 
-        //basketRecyclerView- это название и обращение к списку элементов корзины в xml
-        //это переменная, в которой лежит описание того как отображаются ячейки списка
-        //в переменную basketRecyclerView мы записываем тот адаптер который создали выше
-        //TODO adapter basketRecyclerView тоже самое itemViewAdapter
-        basketRecyclerView.adapter = itemViewAdapter
-    }
-
-    override val goToRecipe = {
-        startActivity(Intent(this, RecipeDetailsActivity::class.java))
+        viewModel.goToRecipeLiveEvent.observe(viewLifecycleOwner, Observer {
+            TODO()         // startActivity(Intent(this, RecipeListActivity::class.java))
+        })
     }
 }
 

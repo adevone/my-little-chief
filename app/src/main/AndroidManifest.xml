@@ -13,18 +13,11 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
 
-        <activity android:name=".BasketActivity">
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <activity android:name=".RecipeDetailsActivity" />
-        <activity android:name=".ProductDetailsActivity" />
-        <activity android:name=".EditRecipeActivity" />
-        <activity android:name=".RecipeListActivity">
-
         </activity>
     </application>
 
