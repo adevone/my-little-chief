@@ -1,17 +1,16 @@
 package rusha.x
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -20,14 +19,13 @@ import kotlinx.android.synthetic.main.basket_item.view.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.kodein.di.instance
-import summer.android.SummerActivity
 
 class BasketViewModel : ViewModel() {
     private val json by di.instance<Json>()
     private val httpClient by di.instance<HttpClient>()
 
     val basketItemsLiveData = MutableLiveData<List<Basket.Item>>(emptyList())
-    val goToRecipeLiveEvent = SingleLiveEvent<Nothing>()
+    val goToProductDetails = SingleLiveEvent<Product>()
 
     init {
         viewModelScope.launch {
@@ -45,8 +43,8 @@ class BasketViewModel : ViewModel() {
         }
     }
 
-    fun onToRecipeClick() {
-        goToRecipeLiveEvent.call()
+    fun onBasketItemClick(item: Basket.Item) {
+        goToProductDetails.value = item.product
     }
 }
 
@@ -54,6 +52,7 @@ class BasketViewModel : ViewModel() {
 // TODO для каждого BasketActivity, являющегося AppCompatActivity
 class BasketFragment : Fragment(R.layout.basket_activity) {
     private lateinit var viewModel: BasketViewModel
+
     // мы переопределяем onCreate, чтобы сделать доп. действия при создании активити
     // TODO определяем, что в отличие от других AppCompatActivity, BasketActivity onCreate
     override fun onCreate(
@@ -68,20 +67,12 @@ class BasketFragment : Fragment(R.layout.basket_activity) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // задаем верстку при помощи функции setContentView
-        // TODO после делает setContentView, передавая ему в качестве
-        // TODO layoutResID basket_activity из layout из R
-
-        toRecipeButton.setOnClickListener {
-            viewModel.onToRecipeClick()
-        }
-
         viewModel.basketItemsLiveData.observe(viewLifecycleOwner, Observer { basketItems ->
             //создание адаптера-itemViewAdapter, кладем обьект(который ведет себя так как мы описали
             // в классе BasketListAdapter   типа BasketListAdapter в эту переменную
             //правила работы которого описаны в BasketListAdapter
             //TODO itemViewAdapter будет получен в результате создания BasketListAdapter
-            val itemViewAdapter = BasketListAdapter()
+            val itemViewAdapter = BasketListAdapter(viewModel)
 
             // говорим какой список элементов корзины будет отображать тот адаптер который описали выше.
             // А в itemsToAdopt лежит потенциальный список ингр.
@@ -95,13 +86,17 @@ class BasketFragment : Fragment(R.layout.basket_activity) {
             basketRecyclerView.adapter = itemViewAdapter
         })
 
-        viewModel.goToRecipeLiveEvent.observe(viewLifecycleOwner, Observer {
-            TODO()         // startActivity(Intent(this, RecipeListActivity::class.java))
+        viewModel.goToProductDetails.observe(viewLifecycleOwner, Observer { product ->
+            findNavController().navigate(
+                BasketFragmentDirections.actionBasketFragmentToProductDetailsFragment(product)
+            )
         })
     }
 }
 
-class BasketListAdapter : RecyclerView.Adapter<BasketListAdapter.ItemViewHolder>() {
+class BasketListAdapter (
+    private val viewModel: BasketViewModel
+): RecyclerView.Adapter<BasketListAdapter.ItemViewHolder>() {
 
     var itemsToAdopt: List<Basket.Item> = listOf()
     override fun getItemCount(): Int {
@@ -125,10 +120,13 @@ class BasketListAdapter : RecyclerView.Adapter<BasketListAdapter.ItemViewHolder>
         holder.bind(item = itemOnPosition)
     }
 
-    class ItemViewHolder(
+    inner class ItemViewHolder(
         val containerView: View
     ) : RecyclerView.ViewHolder(containerView) {
         fun bind(item: Basket.Item) {
+            containerView.setOnClickListener {
+                viewModel.onBasketItemClick(item)
+            }
             containerView.basketItemView.text = item.product.name
             containerView.basketCountView.text = item.count.toString()
         }

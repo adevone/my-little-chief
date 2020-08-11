@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.product_details_fragment.*
 
 class ProductDetailsViewModel : ViewModel() {
@@ -19,17 +20,7 @@ class ProductDetailsViewModel : ViewModel() {
 
     val showWelcomeLiveData = MutableLiveData<ShowWelcomeParams?>(null)
 
-    data class GoToBasketParams(val basket: Basket)
-
-    val goToBasketLiveEvent = SingleLiveEvent<GoToBasketParams>()
-
-    init {
-        val product = Product(
-            id = 0,
-            name = "Огурец",
-            price = 50.0,
-            unit = "шт."
-        )
+    fun init (product: Product) {
         nameLiveData.value = product.name
         formattedPriceLiveData.value = "${product.price}/${product.unit}"
     }
@@ -38,31 +29,21 @@ class ProductDetailsViewModel : ViewModel() {
         showWelcomeLiveData.value = ShowWelcomeParams(text = "Привет!")
         showWelcomeLiveData.value = null
     }
-
-    fun onGoToBasketClick() {
-        goToBasketLiveEvent.value = GoToBasketParams(
-            basket = Basket(
-                id = "1",
-                items = emptyList()
-            )
-        )
-    }
 }
 
 class ProductDetailsFragment : Fragment(R.layout.product_details_fragment) {
     private lateinit var viewModel: ProductDetailsViewModel
 
+    private val args by navArgs<ProductDetailsFragmentArgs>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this).get(ProductDetailsViewModel::class.java)
+        viewModel.init(product = args.product)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        basketView.setOnClickListener {
-            viewModel.onGoToBasketClick()
-        }
 
         viewModel.nameLiveData.observe(viewLifecycleOwner, Observer { name ->
             nameView.text = name
@@ -76,11 +57,6 @@ class ProductDetailsFragment : Fragment(R.layout.product_details_fragment) {
             if (params != null) {
                 Toast.makeText(requireContext(), params.text, Toast.LENGTH_LONG).show()
             }
-        })
-
-        viewModel.goToBasketLiveEvent.observe(viewLifecycleOwner, Observer { basket ->
-            println(basket)
-            TODO() // startActivity (Intent(requireContext(), BasketFragment::class.java))
         })
     }
 

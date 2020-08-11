@@ -27,16 +27,22 @@ class RecipeDetailsViewModel : ViewModel() {
 class RecipeDetailsFragment : Fragment(R.layout.recipe_details_activity) {
     private lateinit var viewModel: RecipeDetailsViewModel
 
+    private val args by navArgs<RecipeDetailsFragmentArgs>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this).get(RecipeDetailsViewModel::class.java)
-//        viewModel.init(recipe = ...)
+        viewModel.init(recipe = args.recipe)
+    }
 
-        viewModel.recipeNameLiveData.observe(this, Observer { recipeName ->
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        viewModel.recipeNameLiveData.observe(viewLifecycleOwner, Observer { recipeName ->
             nameView.text = recipeName
         })
 
-        viewModel.ingredientsLiveData.observe(this, Observer { ingredients ->
+        viewModel.ingredientsLiveData.observe(viewLifecycleOwner, Observer { ingredients ->
             val ingredientsViewAdapter = IngredientsListAdapter()
             ingredientsViewAdapter.ingredientsToAdopt = ingredients
             ingredientsView.adapter = ingredientsViewAdapter

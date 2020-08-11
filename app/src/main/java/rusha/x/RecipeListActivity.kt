@@ -20,6 +20,7 @@ interface RecipeListView {
     var recipes: List<Recipe>
     var isRefreshing: Boolean
     val goToEditRecipe: () -> Unit
+    val goToRecipeDetails: (recipe: Recipe) -> Unit
 }
 
 class RecipeListPresenter : BasePresenter<RecipeListView>() {
@@ -31,6 +32,7 @@ class RecipeListPresenter : BasePresenter<RecipeListView>() {
         override var recipes by state({ it::recipes }, initial = emptyList())
         override var isRefreshing by state({ it::isRefreshing }, initial = false)
         override val goToEditRecipe = event { it.goToEditRecipe }.doExactlyOnce()
+        override val goToRecipeDetails = event { it.goToRecipeDetails }.doExactlyOnce()
     }
 
     fun onRefresh() {
@@ -59,6 +61,10 @@ class RecipeListPresenter : BasePresenter<RecipeListView>() {
     fun onAddRecipeClick() {
         viewProxy.goToEditRecipe()
     }
+
+    fun onRecipeClick(recipe: Recipe) {
+        viewProxy.goToRecipeDetails(recipe)
+    }
 }
 
 class RecipeListFragment : SummerFragment(R.layout.recipe_list_activity), RecipeListView {
@@ -83,7 +89,7 @@ class RecipeListFragment : SummerFragment(R.layout.recipe_list_activity), Recipe
     }
 
     override var recipes: List<Recipe> by didSet {
-        val recipesViewAdapter = RecipesListAdapter()
+        val recipesViewAdapter = RecipesListAdapter(presenter)
         recipesViewAdapter.recipesToAdopt = recipes
         recipesView.adapter = recipesViewAdapter
     }
@@ -93,11 +99,22 @@ class RecipeListFragment : SummerFragment(R.layout.recipe_list_activity), Recipe
     }
 
     override val goToEditRecipe = {
-        TODO("startActivity(Intent(this, EditRecipeActivity::class.java))")
+        findNavController().navigate(
+            RecipeListFragmentDirections.actionRecipeListFragmentToEditRecipeFragment()
+        )
     }
+
+    override val goToRecipeDetails = { recipe: Recipe ->
+        findNavController().navigate(
+            RecipeListFragmentDirections.actionRecipeListFragmentToRecipeDetailsFragment(recipe)
+        )
+    }
+
 }
 
-class RecipesListAdapter : RecyclerView.Adapter<RecipesListAdapter.ViewHolder>() {
+class RecipesListAdapter(
+    private val presenter: RecipeListPresenter
+) : RecyclerView.Adapter<RecipesListAdapter.ViewHolder>() {
     var recipesToAdopt: List<Recipe> = listOf()
 
     override fun onCreateViewHolder(
@@ -128,6 +145,9 @@ class RecipesListAdapter : RecyclerView.Adapter<RecipesListAdapter.ViewHolder>()
 
         fun bind(recipe: Recipe) {
             cellView.recipesItem.text = recipe.name
+            cellView.setOnClickListener {
+                presenter.onRecipeClick(recipe)
+            }
         }
     }
 }

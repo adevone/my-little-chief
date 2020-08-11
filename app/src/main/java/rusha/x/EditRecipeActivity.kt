@@ -154,8 +154,8 @@ class EditRecipeFragment : SummerFragment(), EditRecipeView {
 
     private lateinit var ingredientsViewAdapter: EditRecipeIngredientsAdapter
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         save.setOnClickListener {
             presenter.onSaveClick()
